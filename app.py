@@ -568,3 +568,23 @@ def settings():
             return redirect(url_for('dashboard'))
 
     return render_template('settings.html', student=student)
+
+
+#Route for Help
+@app.route('/students/help.html')
+def help_page():
+    # Ensure user is logged in
+    if 'fname' not in session:
+        return redirect(url_for('login'))
+    
+    # Pass session data to template
+    return render_template('help.html')
+
+
+def format_date(value, format="%b %d, %Y"):
+    if value:
+        return value.strftime(format)
+    return ""
+
+app.jinja_env.filters['date'] = format_date
+
