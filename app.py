@@ -92,3 +92,63 @@ class Question(db.Model):
     qstn_ans = db.Column(db.Integer)
     sno = db.Column(db.Integer, nullable=False, autoincrement=True)
 
+
+# Route for Login
+@app.route('/', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if 'fname' in session:
+        return redirect(url_for('dashboard'))
+
+    uname = None
+    pword = None
+
+    if request.method == 'POST':
+        uname = request.form.get('uname')
+        pword = request.form.get('pword')
+    elif request.method == 'GET':
+        uname = request.args.get('uname')
+        pword = request.args.get('pword')
+
+    # Set a default greeting before processing login
+    current_time = datetime.now().hour
+    if current_time < 12:
+        session['greet'] = "Good Morning"
+        session['greet_img'] = url_for('static', filename='img/mng.jpg')
+    elif 12 <= current_time < 17:
+        session['greet'] = "Good Afternoon"
+        session['greet_img'] = url_for('static', filename='img/aftn.jpg')
+    elif 17 <= current_time < 19:
+        session['greet'] = "Good Evening"
+        session['greet_img'] = url_for('static', filename='img/evng.jpg')
+    else:
+        session['greet'] = "Good Evening"
+        session['greet_img'] = url_for('static', filename='img/evng.jpg')
+
+    if uname and pword:
+        # Check user credentials
+        user = Student.query.filter_by(uname=uname).first()
+        if user and bcrypt.checkpw(pword.encode('utf-8'), user.pword.encode('utf-8')):
+            gender_normalized = user.gender.strip().upper()
+            if gender_normalized not in ['M', 'F']:
+                gender_normalized = "UNKNOWN"
+
+            # Set session variables
+            session['user_id'] = user.id
+            session['fname'] = user.fname.strip()
+            session['email'] = user.email
+            session['dob'] = str(user.dob)
+            session['gender'] = gender_normalized
+            session['uname'] = user.uname
+            session['img'] = url_for(
+                'static',
+                filename=f'img/{"mp.png" if gender_normalized == "M" else "fp.png"}'
+            )
+
+            return redirect(url_for('dashboard'))
+        else:
+            logging.debug("Invalid username or password")
+            return "Invalid username or password", 401
+
+    # Pass greeting to the template
+    return render_template('login.html', greet=session['greet'], greet_img=session['greet_img'])
