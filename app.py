@@ -152,3 +152,146 @@ def login():
 
     # Pass greeting to the template
     return render_template('login.html', greet=session['greet'], greet_img=session['greet_img'])
+
+@app.route('/students/dash')
+def dashboard():
+    if 'fname' not in session:
+        return redirect(url_for('login'))  # Redirect to login if not logged in
+
+    uname = session['uname']
+
+    # Query counts from the database
+    total_exams = db.session.query(func.count(Exam.exid)).scalar()  # Use 'exid' instead of 'id'
+    total_attempts = db.session.query(func.count(Attempt.id)).filter(Attempt.student_id == session['user_id']).scalar()
+    total_messages = db.session.query(func.count(Message.id)).filter(Message.student_id == session['user_id']).scalar()
+
+    return render_template('student_dashbord.html', fname=session['fname'], total_exams=total_exams, total_attempts=total_attempts, total_messages=total_messages)
+
+# Route for Logout
+@app.route('/logout')
+def logout():
+    session.clear()  # Clear all session data
+    return redirect(url_for('login'))  # Redirect to login page
+
+# Route for Teacher Login
+@app.route('/teacher_login.html')
+def teacher_login():
+    if 'teacher_fname' in session:  # Check if teacher is already logged in
+        return redirect(url_for('teacher_dashboard'))
+
+    uname = None
+    pword = None
+
+    if request.method == 'POST':
+        uname = request.form.get('uname')
+        pword = request.form.get('pword')
+    elif request.method == 'GET':
+        uname = request.args.get('uname')
+        pword = request.args.get('pword')
+
+    current_time = datetime.now().hour
+    if current_time < 12:
+        session['greet'] = "Good Morning"
+        session['greet_img'] = url_for('static', filename='img/mng.jpg')
+    elif 12 <= current_time < 17:
+        session['greet'] = "Good Afternoon"
+        session['greet_img'] = url_for('static', filename='img/aftn.jpg')
+    elif 17 <= current_time < 19:
+        session['greet'] = "Good Evening"
+        session['greet_img'] = url_for('static', filename='img/evng.jpg')
+    else:
+        session['greet'] = "Good Evening"
+        session['greet_img'] = url_for('static', filename='img/evng.jpg')
+    if uname and pword:
+        # Check teacher credentials
+        teacher = Teacher.query.filter_by(uname=uname).first()
+        if teacher and bcrypt.checkpw(pword.encode('utf-8'), teacher.pword.encode('utf-8')):
+            # Log full teacher record and gender field for debugging
+            logging.debug(f"Teacher Record: {teacher}")
+            logging.debug(f"Raw Gender from DB: '{teacher.gender}'")
+
+            # Normalize gender to handle extra spaces and inconsistent casing
+            gender_normalized = teacher.gender.strip().upper()
+            logging.debug(f"Normalized Gender: '{gender_normalized}'")  # Debug normalized gender
+
+            # Validate gender format (default to "UNKNOWN" if invalid)
+            if gender_normalized not in ['M', 'F']:
+                gender_normalized = "UNKNOWN"
+                logging.debug(f"Invalid Gender Detected. Defaulting to '{gender_normalized}'")
+
+            # Set session variables
+            session['teacher_id'] = teacher.id
+            session['teacher_fname'] = teacher.fname.strip()  # Trim any extra spaces from name
+            session['teacher_email'] = teacher.email
+            session['teacher_dob'] = str(teacher.dob)
+            session['teacher_gender'] = gender_normalized  # Use normalized gender
+            session['teacher_uname'] = teacher.uname
+
+            # Assign profile image based on normalized gender
+            session['teacher_img'] = url_for(
+                'static',
+                filename=f'img/{"mp.png" if gender_normalized == "M" else "fp.png"}'
+            )
+
+            return redirect(url_for('teacher_dashboard'))
+        else:
+            logging.debug("Invalid username or password for teacher")  # Debug invalid login attempt
+            return "Invalid username or password", 401
+
+    return render_template('teacher_login.html',greet=session['greet'], greet_img=session['greet_img'])
+
+#Route for Teacher Dashbord
+@app.route('/teacher/dashboard')
+def teacher_dashboard():
+    if 'teacher_fname' not in session:  # Redirect to login if not logged in
+        return redirect(url_for('teacher_login'))
+
+    uname = session['teacher_uname']
+    recent_results = db.session.query(
+        Attempt.subtime,
+        Attempt.uname,
+        Exam.exname.label('exam_name'),
+        Attempt.ptg
+    ).join(Exam, Exam.exid == Attempt.exid) \
+     .order_by(Attempt.subtime.desc()) \
+     .limit(5).all()
+    recent_results_dicts = [
+    {
+        'subtime': result.subtime.strftime("%Y-%m-%d"),  # Format as YYYY-MM-DD
+        'uname': result.uname,
+        'exam_name': result.exam_name,
+        'ptg': result.ptg,
+    }
+    for result in recent_results
+]
+    # Query counts from the database
+    total_students = db.session.query(func.count(Student.id)).scalar()
+    total_exams = db.session.query(func.count(Exam.exid)).scalar()
+    total_exams_created = db.session.query(func.count(Exam.exid)).filter(Exam.subject == session['teacher_uname']).scalar()
+    total_students_attempted = db.session.query(func.count(Attempt.student_id.distinct())).join(
+    Exam, Exam.exid == Attempt.exid
+).join(
+    Teacher, Teacher.uname == session['teacher_uname']
+).filter(
+    Exam.subject == Teacher.subject
+).scalar()
+    total_messages_received = db.session.query(func.count(Message.id)).join(
+    Student, Student.id == Message.student_id
+).join(
+    Attempt, Attempt.student_id == Student.id
+).join(
+    Exam, Exam.exid == Attempt.exid
+).filter(
+    Exam.exname == session['teacher_uname']
+).scalar()
+
+    return render_template(
+        'teacher_dashbord.html',
+        fname=session['teacher_fname'],
+        total_exams_created=total_exams_created,
+        total_students_attempted=total_students_attempted,
+        total_messages_received=total_messages_received,
+        recent_results=recent_results_dicts,
+        total_students=total_students,
+        total_exams=total_exams
+    ) 
