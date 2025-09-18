@@ -403,3 +403,47 @@ def take_exam(exid):
         return render_template('examportal.html', exam=exam, questions=questions, exam_subtime=exam_subtime)
 
     return render_template('examportal.html', exam=exam, questions=questions, exam_subtime=exam_subtime)
+
+
+# Route for Submit Exam
+@app.route('/submit_exam', methods=['POST'])
+def submit_exam():
+    if 'uname' not in session:
+        return redirect(url_for('login'))  # Redirect to login if not logged in
+
+    # Retrieve exam details and questions
+    exid = request.form.get('exid')
+    exam = Exam.query.get_or_404(exid)
+    questions = Question.query.filter_by(exid=exid).all()
+
+    if not questions:
+        flash("There are no questions in this exam.", "error")
+        return redirect(url_for('exams'))  # Redirect if no questions are available
+
+    total_score = 0
+
+    for question in questions:
+        selected_option = request.form.get(f"o{question.qid}")
+        if selected_option and selected_option == str(question.qstn_ans):  # Compare with correct answer
+            total_score += 1
+
+    # Calculate percentage and status
+    percentage = (total_score / len(questions)) * 100 if questions else 0
+    status = 1 if percentage >= 40 else 0  # You can change this threshold if needed
+
+    # Save the attempt
+    attempt = Attempt(
+        exid=exid,
+        student_id=session['user_id'],
+        uname=session.get('uname'),
+        nq=len(questions),
+        cnq=total_score,
+        ptg=percentage,
+        status=status,
+    )
+    db.session.add(attempt)
+    db.session.commit()
+
+    flash(f"You scored {total_score}/{len(questions)}! Status: {'Passed' if status else 'Failed'}", "success")
+    return redirect(url_for('exams'))
+
