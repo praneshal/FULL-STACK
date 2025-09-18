@@ -1,8 +1,8 @@
-Flask==2.2.2
-Flask-SQLAlchemy==3.0.2
-SQLAlchemy==2.0.19
-bcrypt==4.0.1
-gunicorn==20.1.0
-Werkzeug==2.3.2
+Flask
+Flask-SQLAlchemy
+SQLAlchemy
+bcrypt
+gunicorn
+Werkzeug
 psycopg2-binary
-python-dotenv==1.0.1
+python-dotenv
