@@ -447,3 +447,28 @@ def submit_exam():
     flash(f"You scored {total_score}/{len(questions)}! Status: {'Passed' if status else 'Failed'}", "success")
     return redirect(url_for('exams'))
 
+
+#Routr for Results
+@app.route('/students/results.html', methods=['GET'])
+def results():
+    if 'uname' not in session:
+        return redirect(url_for('login'))
+
+    uname = session['uname']
+    student = Student.query.filter_by(uname=uname).first()
+    if student is None:
+        return redirect(url_for('login'))
+
+    # Query the attempts with exams
+    attempts = (
+        db.session.query(Attempt, Exam)
+        .join(Exam, Attempt.exid == Exam.exid)  # Use outer join
+        .filter(Attempt.student_id == student.id)
+        .all()
+    )
+    for attempt, exam in attempts:
+        if attempt.cnq is not None and exam.nq is not None:
+            attempt.ptg = round((attempt.cnq / exam.nq) * 100, 2) # Calculate percentage
+        else:
+            attempt.ptg = 0
+    return render_template('results.html', attempts=attempts, student=student)
