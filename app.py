@@ -522,3 +522,49 @@ def delete_message(message_id):
         flash(f'An error occurred while deleting the message: {str(e)}', 'error')
 
     return redirect(url_for('messages'))
+
+
+#Route For Settings
+@app.route('/students/settings.html', methods=['GET', 'POST'])
+def settings():
+    if 'user_id' not in session:
+        flash('Please log in to access settings.', 'warning')
+        return redirect(url_for('login'))
+    
+    student = Student.query.filter_by(id=session['user_id']).first()
+    
+    if request.method == 'POST':
+        # Get form data
+        fname = request.form.get('fname').strip()
+        uname= request.form.get('uname').strip()
+        email = request.form.get('email').strip()
+        dob = request.form.get('dob').strip()
+        gender = request.form.get('gender').strip().upper()
+
+        # Update student details
+        if student:
+            student.fname = fname
+            student.uname = uname
+            student.email = email
+            student.dob = datetime.strptime(dob, "%Y-%m-%d").date() if dob else student.dob
+            student.gender = gender
+            db.session.commit()
+
+            # Update session variables
+            session['fname'] = fname
+            session['uname'] = uname
+            session['email'] = email
+            session['dob'] = dob
+            session['gender'] = gender
+            session['img'] = url_for(
+                'static',
+                filename=f'img/{"mp.png" if gender == "M" else "fp.png"}'
+            )
+
+            flash('Profile updated successfully! Kindly re-login to see the changes.', 'success')
+            return redirect(url_for('logout'))  # Force re-login
+        else:
+            flash('Student record not found.', 'error')
+            return redirect(url_for('dashboard'))
+
+    return render_template('settings.html', student=student)
