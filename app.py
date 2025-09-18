@@ -472,3 +472,30 @@ def results():
         else:
             attempt.ptg = 0
     return render_template('results.html', attempts=attempts, student=student)
+
+
+#Route for Student Messages
+@app.route('/students/messages.html')
+def messages():
+    if 'user_id' not in session:
+        flash('Please log in to access messages.', 'warning')
+        return redirect(url_for('login_student'))
+
+    # Retrieve the logged-in user's ID from the session
+    user_id = session['user_id']
+
+    # Query messages for the logged-in user only
+    messages = (
+        Message.query.filter_by(student_id=user_id)
+        .join(Student, Message.student_id == Student.id)
+        .add_columns(
+            Message.id,  # Ensure we fetch the message ID
+            Message.fname,
+            Message.date,
+            Message.feedback,
+            Student.fname.label('student_fname')
+        )
+        .all()
+    )
+
+    return render_template('messages.html', messages=messages)
