@@ -295,3 +295,16 @@ def teacher_dashboard():
         total_students=total_students,
         total_exams=total_exams
     ) 
+#test_Connection
+@app.route('/test_db_connection', methods=['GET'])
+def test_db_connection():
+    try:
+        # Query the first row from the 'student' table
+        result = db.session.execute(text('SELECT * FROM student LIMIT 1')).fetchone()
+        if result:
+            return f"Database connection successful! First row: {result}", 200
+        else:
+            return "Database connection successful but no rows found in the 'student' table.", 200
+    except Exception as e:
+        return f"Database connection failed: {str(e)}", 500
+
