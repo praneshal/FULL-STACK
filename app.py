@@ -499,3 +499,26 @@ def messages():
     )
 
     return render_template('messages.html', messages=messages)
+
+#Route to Delete Message Student
+@app.route('/students/delete_message/<int:message_id>', methods=['POST'])
+def delete_message(message_id):
+    if 'user_id' not in session:
+        flash('Please log in to delete messages.', 'warning')
+        return redirect(url_for('login_student'))
+
+    # Query the message to ensure it belongs to the logged-in user
+    message = Message.query.get(message_id)
+    if not message or message.student_id != session['user_id']:
+        flash('You are not authorized to delete this message.', 'danger')
+        return redirect(url_for('messages'))
+
+    try:
+        db.session.delete(message)
+        db.session.commit()
+        flash('Message deleted successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'An error occurred while deleting the message: {str(e)}', 'error')
+
+    return redirect(url_for('messages'))
