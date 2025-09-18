@@ -351,3 +351,55 @@ def add_exams():
         flash(f'Error updating questions: {str(e)}', 'danger')
 
     return redirect(url_for('teacher_dashboard'))
+
+
+#Route for Take Exam
+@app.route('/take_exam/<int:exid>', methods=['GET', 'POST'])
+def take_exam(exid):
+    if 'uname' not in session:
+        return redirect(url_for('login'))  # Redirect to login if not logged in
+
+    # Fetch exam details using SQLAlchemy
+    exam = Exam.query.get_or_404(exid)  # Get the exam using SQLAlchemy's ORM
+    questions = Question.query.filter_by(exid=exid).all()  # Get questions for the exam
+
+    # Convert subtime to ISO format (JavaScript-readable)
+    exam_subtime = exam.subt.isoformat() if exam.subt else None  # Ensure it’s in ISO format
+
+    if request.method == 'POST':
+        # Process answers
+        total_score = 0
+        for question in questions:
+            selected_option = request.form.get(f"o{question.qid}", None)  # Match radio button names
+            if selected_option and int(selected_option) == question.qstn_ans:
+                total_score += 1
+        
+        # Calculate percentage
+        percentage = (total_score / len(questions)) * 100 if len(questions) > 0 else 0
+
+        # Determine status based on score
+        status = 1 if percentage >= 40 else 0  # Example logic, adjust as needed
+        
+        # Save attempt using SQLAlchemy
+        attempt = Attempt(
+            exid=exid,
+            student_id=session['user_id'],
+            uname=session.get('uname'),
+            nq=exam.nq,
+            cnq=total_score,  # Correct number of answers
+            ptg=percentage,   # Percentage
+            status=status,    # Assign status
+        )
+        db.session.add(attempt)
+        db.session.commit()
+
+        # Flash message for feedback
+        if status == 1:
+            flash(f"Congratulations! You passed the exam with a score of {total_score}/{len(questions)} ({percentage}%).", "success")
+        else:
+            flash(f"You failed the exam with a score of {total_score}/{len(questions)} ({percentage}%).", "danger")
+
+        # Redirect to a results or another page
+        return render_template('examportal.html', exam=exam, questions=questions, exam_subtime=exam_subtime)
+
+    return render_template('examportal.html', exam=exam, questions=questions, exam_subtime=exam_subtime)
