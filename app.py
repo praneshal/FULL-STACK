@@ -308,3 +308,46 @@ def test_db_connection():
     except Exception as e:
         return f"Database connection failed: {str(e)}", 500
 
+# Route for Exam List
+@app.route('/students/exams.html', methods=['GET'])
+def exams():
+    if 'uname' not in session:
+        return redirect(url_for('login'))
+    
+    all_exams = Exam.query.all()
+    return render_template('exams.html', exams=all_exams)
+
+# Route for Add Exam (Teacher Functionality)
+@app.route('/add_exams', methods=['GET', 'POST'])
+def add_exams():
+    if 'teacher_fname' not in session:
+        return redirect(url_for('login_teacher'))
+
+    exid = request.form.get('exid')
+    nq = int(request.form.get('nq'))
+
+    # Collect questions and their options
+    questions = []
+    for i in range(1, nq + 1):
+        question_data = Question(
+            exid=exid,
+            qstn=request.form.get(f'q{i}'),
+            qstn_o1=request.form.get(f'o1{i}'),
+            qstn_o2=request.form.get(f'o2{i}'),
+            qstn_o3=request.form.get(f'o3{i}'),
+            qstn_o4=request.form.get(f'o4{i}'),
+            qstn_ans=request.form.get(f'a{i}'),
+            # sno=i  # Assuming the serial number is the question's order
+        )
+        questions.append(question_data)
+
+    try:
+        # Save all questions to the database
+        db.session.bulk_save_objects(questions)
+        db.session.commit()
+        flash('Questions updated successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error updating questions: {str(e)}', 'danger')
+
+    return redirect(url_for('teacher_dashboard'))
