@@ -588,3 +588,22 @@ def format_date(value, format="%b %d, %Y"):
 
 app.jinja_env.filters['date'] = format_date
 
+
+
+#Route for Exam(Teacher)
+@app.route('/exams', methods=['GET', 'POST'])
+def manage_exams():
+    if request.method == 'POST':
+        exname = request.form.get('exname')
+        desp = request.form.get('desp')
+        extime = datetime.strptime(request.form.get('extime'), '%Y-%m-%dT%H:%M')
+        subt = datetime.strptime(request.form.get('subt'), '%Y-%m-%dT%H:%M')
+        nq = request.form.get('nq')
+        exam = Exam(exname=exname, desp=desp, extime=extime, subt=subt, nq=nq)
+        db.session.add(exam)
+        db.session.commit()
+        flash('Exam added successfully!', 'success')
+        return redirect(url_for('manage_exams'))
+    
+    exams = Exam.query.all()  # Fetch all exams
+    return render_template('teacher_exam.html', exams=exams)
