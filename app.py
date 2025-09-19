@@ -607,3 +607,32 @@ def manage_exams():
     
     exams = Exam.query.all()  # Fetch all exams
     return render_template('teacher_exam.html', exams=exams)
+
+
+@app.route('/delete_exam/<int:exid>', methods=['POST'])
+def delete_exam(exid):
+    exam = Exam.query.get(exid)
+    if exam:
+        db.session.delete(exam)  # This will also delete all related attempts due to cascade
+        db.session.commit()
+        flash('Exam and related attempts deleted successfully!', 'danger')
+    else:
+        flash('Exam not found!', 'warning')
+    return redirect(url_for('exams'))
+
+
+@app.route('/edit_exam/<int:exid>', methods=['GET', 'POST'])
+def edit_exam(exid):
+    exam = Exam.query.get_or_404(exid)
+    
+    if request.method == 'POST':
+        exam.exname = request.form.get('exname')
+        exam.desp = request.form.get('desp')
+        exam.extime = datetime.strptime(request.form.get('extime'), '%Y-%m-%dT%H:%M')
+        exam.subt = datetime.strptime(request.form.get('subt'), '%Y-%m-%dT%H:%M')
+        exam.nq = request.form.get('nq')
+        db.session.commit()
+        flash('Exam updated successfully!', 'info')
+        return redirect(url_for('manage_exams'))
+    
+    return render_template('edit_exam.html', exam=exam)
