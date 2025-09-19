@@ -655,3 +655,17 @@ def help():
 
 app.jinja_env.globals.update(enumerate=enumerate)
 
+
+#Route for Add Question Paper
+@app.route('/add_question_paper', methods=['GET', 'POST'])
+def add_question_paper():
+    if 'teacher_fname' not in session:
+        return redirect(url_for('teacher_login'))
+
+    if request.method == 'POST':
+        exid = request.form.get('exid')
+        nq = int(request.form.get('nq'))
+        return render_template('add_question_paper.html', exid=exid, nq=nq)
+
+    return redirect(url_for('teacher_dashboard'))
+
