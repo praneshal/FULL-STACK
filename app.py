@@ -636,3 +636,22 @@ def edit_exam(exid):
         return redirect(url_for('manage_exams'))
     
     return render_template('edit_exam.html', exam=exam)
+
+
+#Route for Records
+@app.route('/records')
+def records():
+    if 'teacher_fname' not in session:
+        return redirect(url_for('teacher_login'))
+    students = Student.query.all()
+    return render_template("records.html", students=students)
+
+#Route for Help
+@app.route('/help')
+def help():
+    if 'teacher_fname' not in session:
+        return redirect(url_for('teacher_login'))
+    return render_template("teacher_help.html")
+
+app.jinja_env.globals.update(enumerate=enumerate)
+
