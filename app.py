@@ -754,3 +754,55 @@ def add_user():
         return redirect(url_for('records'))  # Redirect to the records page after successful addition
     
     return render_template('teacher_dashbord.html')  # Render the add user form
+
+
+#Route for Teacher Settings
+@app.route('/teacher/settings', methods=['GET', 'POST'])
+def teacher_settings():
+    if 'teacher_id' not in session:
+        flash('Please log in to access settings.', 'warning')
+        return redirect(url_for('login'))
+
+    teacher = Teacher.query.filter_by(id=session['teacher_id']).first()
+
+    if not teacher:
+        flash('Teacher record not found.', 'error')
+        return redirect(url_for('dashboard'))
+
+    if request.method == 'POST':
+        # Get form data
+        fname = request.form.get('fname').strip()
+        subject = request.form.get('subject').strip()
+        uname = request.form.get('uname').strip()
+        email = request.form.get('email').strip()
+        dob = request.form.get('dob').strip()
+        gender = request.form.get('gender').strip().upper()
+
+        # Update teacher details
+        teacher.fname = fname
+        teacher.uname = uname
+        teacher.subject = subject
+        teacher.email = email
+        teacher.dob = datetime.strptime(dob, "%Y-%m-%d").date() if dob else teacher.dob
+        teacher.gender = gender
+        db.session.commit()
+
+        # Update session variables
+        session['fname'] = fname
+        session['subject'] = subject
+        session['uname'] = uname
+        session['email'] = email
+        session['dob'] = dob
+        session['gender'] = gender
+
+        # Set dynamic profile image based on gender
+        session['img'] = url_for(
+            'static',
+            filename=f'img/{"mp.png" if gender == "M" else "fp.png"}'
+        )
+
+        flash('Profile updated successfully! Kindly re-login to see the changes.', 'success')
+        return redirect(url_for('logout'))  # Force re-login
+
+    # Render the settings page with teacher data
+    return render_template('teacher_settings.html', teacher=teacher)
