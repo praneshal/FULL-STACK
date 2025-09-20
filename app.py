@@ -898,3 +898,40 @@ def teacher_results():
         })
     
     return render_template('teacher_result.html', exam_results=exam_results)
+
+
+@app.route('/add_exam', methods=['GET', 'POST'])
+def add_exam():
+    if request.method == 'POST':
+        try:
+            # Fetching form data
+            exname = request.form['exname']
+            subject = request.form['subject']
+            desp = request.form['desp']
+            extime = datetime.strptime(request.form['extime'], "%Y-%m-%dT%H:%M")
+            subt = datetime.strptime(request.form['subt'], "%Y-%m-%dT%H:%M")
+            nq = int(request.form['nq'])
+
+            # Validating submission time
+            if subt <= extime:
+                flash('Submission time must be after the exam start time', 'error')
+                return redirect(url_for('exams'))
+
+            # Creating a new exam entry
+            new_exam = Exam(exname=exname, subject=subject, desp=desp, extime=extime, subt=subt, nq=nq)
+            db.session.add(new_exam)
+            db.session.commit()
+
+            flash('Exam added successfully!', 'success')
+            return redirect(url_for('exams'))
+        except Exception as e:
+            flash(f"Error adding exam: {str(e)}", 'error')
+            return redirect(url_for('exams'))
+
+    # Render the form for GET request
+    return render_template('teacher_exam.html')
+
+
+# Run Flask App
+if __name__ == '__main__':
+    app.run(debug=True)
