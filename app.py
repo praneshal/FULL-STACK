@@ -806,3 +806,65 @@ def teacher_settings():
 
     # Render the settings page with teacher data
     return render_template('teacher_settings.html', teacher=teacher)
+
+
+
+#Route for Teacher Messages
+@app.route('/teacher/message', methods=['GET', 'POST'])
+def teacher_message():
+    if request.method == 'POST':
+        # Retrieve form data
+        feedback = request.form.get('feedback')
+        student_id = request.form.get('student_id')  # Ensure this is passed from the form
+
+        # Validate inputs
+        if not feedback or not feedback.strip():
+            flash("Feedback cannot be empty!", "error")
+            return redirect(url_for('teacher_message'))
+
+        if not student_id or student_id.strip() == "":  # If "All Students" is selected
+            students = Student.query.all()  # Retrieve all students
+            try:
+                for student in students:
+                    # Save message in the database
+                    new_message = Message(
+                        fname=session.get('teacher_fname', 'Teacher'),
+                        feedback=feedback.strip(),
+                        student_id=student.id
+                    )
+                    db.session.add(new_message)
+
+                db.session.commit()  # Commit all messages at once
+                flash("Message sent successfully to all students!", "success")
+            except Exception as e:
+                db.session.rollback()  # Rollback if any issue occurs
+                flash(f"An error occurred while saving messages: {str(e)}", "error")
+                return redirect(url_for('teacher_message'))
+
+        else:  # If a specific student is selected
+            student = Student.query.filter_by(id=int(student_id.strip())).first()
+            if not student:
+                flash("Student not found!", "error")
+                return redirect(url_for('teacher_message'))
+
+            try:
+                # Save message in the database
+                new_message = Message(
+                    fname=session.get('teacher_fname', 'Teacher'),
+                    feedback=feedback.strip(),
+                    student_id=student.id
+                )
+                db.session.add(new_message)
+
+                db.session.commit()  # Commit only this message
+                flash(f"Message sent successfully to {student.fname}!", "success")
+            except Exception as e:
+                db.session.rollback()  # Rollback if any issue occurs
+                flash(f"An error occurred while saving the message: {str(e)}", "error")
+                return redirect(url_for('teacher_message'))
+
+        return redirect(url_for('teacher_message'))
+
+    # For GET requests, display the message form and list of students
+    students = Student.query.all()  # Retrieve all students for the form dropdown or selection
+    return render_template('teacher_message.html', students=students)
