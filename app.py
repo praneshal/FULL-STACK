@@ -669,3 +669,31 @@ def add_question_paper():
 
     return redirect(url_for('teacher_dashboard'))
 
+
+#Route for Updates
+@app.route('/update_user', methods=['POST'])
+def update_user():
+    if 'teacher_fname' not in session:
+        return redirect(url_for('login_teacher'))
+
+    if request.method == 'POST':
+        id = request.form['id']
+        fname = request.form['fname']
+        uname = request.form['uname']
+        email = request.form['email']
+        dob = request.form['dob']
+        gender = request.form['gender']
+
+        student = Student.query.get(id)
+
+        if student:
+            student.fname = fname
+            student.uname = uname
+            student.email = email
+            student.dob = dob
+            student.gender = gender
+
+            db.session.commit()
+
+        return redirect(url_for('records'))
+
