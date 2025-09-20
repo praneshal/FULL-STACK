@@ -868,3 +868,33 @@ def teacher_message():
     # For GET requests, display the message form and list of students
     students = Student.query.all()  # Retrieve all students for the form dropdown or selection
     return render_template('teacher_message.html', students=students)
+
+
+#Route for Teacher Result
+@app.route('/results', methods=['GET'])
+def teacher_results():
+    if 'teacher_id' not in session:
+        return redirect(url_for('login'))
+    
+    # Fetch all exams from the database
+    exams = Exam.query.all()
+    
+    # Process each exam to calculate metrics
+    exam_results = []
+    for exam in exams:
+        # Fetch attempts for the current exam
+        attempts = Attempt.query.filter_by(exid=exam.exid).all()
+        
+        # Calculate pass/fail metrics
+        passed_count = sum(1 for attempt in attempts if attempt.status == 1)
+        failed_count = sum(1 for attempt in attempts if attempt.status == 0)
+        total_students = len(attempts)
+        
+        exam_results.append({
+            "exam": exam,
+            "passed_count": passed_count,
+            "failed_count": failed_count,
+            "total_students": total_students,
+        })
+    
+    return render_template('teacher_result.html', exam_results=exam_results)
