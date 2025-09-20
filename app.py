@@ -697,3 +697,60 @@ def update_user():
 
         return redirect(url_for('records'))
 
+#Route for Delete User
+@app.route('/delete_user/<int:user_id>', methods=['POST'])
+def delete_user(user_id):
+    if 'teacher_fname' not in session:
+        return redirect(url_for('teacher_login'))
+    
+    user = Student.query.get(user_id)
+    
+    if user:
+        # First delete related messages
+        Message.query.filter_by(student_id=user_id).delete()
+        db.session.commit()
+        
+        # Now delete the user
+        db.session.delete(user)
+        db.session.commit()
+        flash('User and associated messages deleted successfully!', 'success')
+    
+    return redirect(url_for('records'))
+#Route To Add User
+@app.route('/add_user', methods=['GET', 'POST'])
+def add_user():
+    if request.method == 'POST':
+        # Retrieve form data
+        fname = request.form['fname']
+        uname = request.form['uname']
+        pword = request.form['pword']
+        cpword = request.form['cpword']
+        email = request.form['email']
+        dob = request.form['dob']
+        gender = request.form['gender']
+        
+        # Ensure the passwords match
+        if pword != cpword:
+            flash("Passwords do not match!", "danger")
+            return redirect(url_for('add_user'))
+
+        # Hash the password before storing it in the database
+
+        # Create a new student object
+        new_student = Student(
+            fname=fname,
+            uname=uname,
+            pword=pword,
+            email=email,
+            dob=dob,
+            gender=gender
+        )
+
+        # Add the student to the database
+        db.session.add(new_student)
+        db.session.commit()
+
+        flash("Student added successfully!", "success")
+        return redirect(url_for('records'))  # Redirect to the records page after successful addition
+    
+    return render_template('teacher_dashbord.html')  # Render the add user form
