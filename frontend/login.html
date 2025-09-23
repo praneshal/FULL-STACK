@@ -1,0 +1,47 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{{ url_for('static', filename='img/icon.png') }}" type="image/png">
+    <!-- ICO Favicon for older browsers -->
+    <!-- <link rel="icon" href="{{ url_for('static', filename='icon.png') }}" type="image/x-icon"> -->
+    <link rel="stylesheet" href="static\css\style.css">
+    <title>Login | Welcome</title>
+</head>
+<style>
+    body {
+        background-image: url('{{ greet_img }}');
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-size: 100% 100%;
+    }
+</style>
+<body>
+    <h1 id="greeting">{{ greet }}</h1>
+    <div class="container" id="container">
+        <div class="form-container log-in-container">
+            <form id="loginForm">
+                <h1>Student Login</h1>
+                <span>Enter credentials</span>
+                <input type="text" name="uname" id="uname" placeholder="Username" required>
+                <input type="password" name="pword" id="pword" placeholder="Password" required>
+                <a href="#">Forgot your password?</a>
+                <button type="submit">Log In</button>
+            </form>
+        </div>
+        <div class="overlay-container">
+            <div class="overlay">
+                <div class="overlay-panel overlay-right">
+                    <p>Login as teacher</p>
+                    <button style="background-color:#ffffff;border-color:black;">
+                        <a href="teacher_login.html">Continue</a>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="static/js/script.js"></script>
+</body>
+</html>
