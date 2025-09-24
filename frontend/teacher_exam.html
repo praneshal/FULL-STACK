@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8">
+    <title>Teacher's Dashboard</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/icon.png') }}" type="image/png">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dash.css') }}">
+    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="logo-details">
+        <i class='bx bx-diamond'></i>
+        <span class="logo_name">Welcome</span>
+      </div>
+      <ul class="nav-links">
+        <li>
+          <a href="/teacher/dashboard">
+            <i class='bx bx-grid-alt'></i>
+            <span class="links_name">Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="#" class="active">
+            <i class='bx bx-book-content'></i>
+            <span class="links_name">Exams</span>
+          </a>
+        </li>
+        <li>
+          <a href="/results">
+            <i class='bx bxs-bar-chart-alt-2'></i>
+            <span class="links_name">Results</span>
+          </a>
+        </li>
+        <li>
+          <a href="/records">
+            <i class='bx bxs-user-circle'></i>
+            <span class="links_name">Records</span>
+          </a>
+        </li>
+        <li>
+          <a href="/teacher/message">
+            <i class='bx bx-message'></i>
+            <span class="links_name">Messages</span>
+          </a>
+        </li>
+        <li>
+          <a href="/teacher/settings">
+            <i class='bx bx-cog'></i>
+            <span class="links_name">Settings</span>
+          </a>
+        </li>
+        <li>
+          <a href="/help">
+            <i class='bx bx-help-circle'></i>
+            <span class="links_name">Help</span>
+          </a>
+        </li>
+        <li class="log_out">
+          <a href="{{ url_for('logout') }}">
+            <i class='bx bx-log-out-circle'></i>
+            <span class="links_name">Log out</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+    <section class="home-section">
+      <nav>
+        <div class="sidebar-button">
+          <i class='bx bx-menu sidebarBtn'></i>
+          <span class="dashboard">Teacher's Dashboard</span>
+        </div>
+        <div class="profile-details">
+          <img src="{{ session['teacher_img'] }}" alt="profile picture">
+          <span class="admin_name">{{ session['teacher_fname'] }}</span>
+        </div>
+      </nav>
+
+      <div class="home-content">
+        <div class="stat-boxes">
+          <div class="recent-stat box" style="padding: 0px 0px;width:75%;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Exam no.</th>
+                  <th>Exam name</th>
+                  <th>Subject</th>
+                  <th>Description</th>
+                  <th>No. of questions</th>
+                  <th>Exam time</th>
+                  <th>Submission time</th>
+                  <th>EDIT</th>
+                  <th>DELETE</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for i, exam in enumerate(exams) %}
+                  <tr>
+                    <td>{{ i + 1 }}</td>
+                    <td>{{ exam.exname }}</td>
+                    <td>{{ exam.subject }}</td>
+                    <td>{{ exam.desp }}</td>
+                    <td>{{ exam.nq }}</td>
+                    <td>{{ exam.extime }}</td>
+                    <td>{{ exam.subt }}</td>
+                    <td>
+                      <form action="{{ url_for('add_question_paper') }}" method="post">
+                        <input type="hidden" name="nq" value="{{ exam.nq }}">
+                        <input type="hidden" name="exid" value="{{ exam.exid }}">
+                        <button type="submit" name="edit_btn" class="rounded-button-updt"><i class='bx bxs-edit'></i></button>
+                      </form>
+                    </td>
+                    <td>
+                      <form action="{{ url_for('delete_exam', exid=exam['exid']) }}" method="post">
+                        <input type="hidden" name="delete_id" value="{{ exam.exid }}">
+                        <button type="submit" name="delete_btn" class="rounded-button-del"><i class='bx bx-x'></i></button>
+                      </form>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="top-stat box">
+            <div class="title">Add new exam</div>
+            <br><br>
+            <form action="{{ url_for('add_exam') }}" method="post">
+              <!-- <input type="hidden" name="subject" value="{{ session['subject'] }}"> -->
+              <label for="exname">Exam name</label><br>
+              <input class="inputbox" type="text" id="exname" name="exname" placeholder="Enter exam name" minlength="1" maxlength="30" required /><br>
+              <label for="subject">Subject</label><br>
+              <input class="inputbox" type="text" id="subject" name="subject" placeholder="Enter Subject name" minlength="1" maxlength="30" required /><br>
+              <label for="desp">Description</label><br>
+              <input class="inputbox" type="text" id="desp" name="desp" placeholder="Enter exam description" minlength="5" maxlength="30" required /><br>
+              <label for="extime">Exam time</label><br>
+              <input class="inputbox" type="datetime-local" id="extime" name="extime" required /><br>
+              <label for="subt">Submission time</label><br>
+              <input class="inputbox" type="datetime-local" id="subt" name="subt" required /><br>
+              <label for="nq">No. of questions</label><br>
+              <input class="inputbox" type="number" id="nq" name="nq" required /><br>
+              <br><br>
+              <button type="submit" name="addexm" class="btn"><i class='bx bx-plus'></i> Add</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  </body>
+</html>
