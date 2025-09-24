@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <title>Messages</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/icon.png') }}" type="image/png">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dash.css') }}">
+    <link href="https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo-details">
+            <i class="bx bx-diamond"></i>
+            <span class="logo_name">Welcome</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="/teacher/dashboard"><i class="bx bx-grid-alt"></i> Dashboard</a></li>
+            <li><a href="/exams"><i class="bx bx-book-content"></i> Exams</a></li>
+            <li><a href="/results"><i class="bx bxs-bar-chart-alt-2"></i> Results</a></li>
+            <li><a href="/records"><i class="bx bxs-user-circle"></i> Records</a></li>
+            <li><a href="#" class="active"><i class="bx bx-message"></i> Messages</a></li>
+            <li><a href="/teacher/settings"><i class="bx bx-cog"></i> Settings</a></li>
+            <li><a href="/help"><i class="bx bx-help-circle"></i> Help</a></li>
+            <li class="log_out"><a href="/logout"><i class="bx bx-log-out-circle"></i> Log out</a></li>
+        </ul>
+    </div>
+
+    <section class="home-section">
+        <nav>
+            <div class="sidebar-button">
+                <i class="bx bx-menu sidebarBtn"></i>
+                <span class="dashboard">Teacher's Dashboard</span>
+            </div>
+            <div class="profile-details">
+                <img src="{{ session['teacher_img'] }}" alt="Profile Picture">
+                <span class="admin_name">{{ session['teacher_fname'] }}</span>
+            </div>
+        </nav>
+
+        <div class="home-content">
+            <div class="stat-boxes">
+                <div class="recent-stat box" style="width:50%;">
+                    <div class="title"><i class="bx bx-spreadsheet"></i> Announcements</div>
+                    <br><br>
+                    <!-- Display flash messages if any -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                    <ul class="flashes">
+                        {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    {% endwith %}
+                    <form action="{{ url_for('teacher_message') }}" method="post">
+                        <!-- Feedback (Message) input -->
+                        <label for="feedback"><b>Type your announcement</b></label><br>
+                        <textarea class="msg" id="feedback" name="feedback" rows="4" cols="30" minlength="4" maxlength="1000" required></textarea><br><br>
+                    
+                        <!-- Select student or send to all -->
+                        <label for="student_id">Send to:</label><br>
+                        <select name="student_id" id="student_id">
+                            <option value="" selected>All Students</option>
+                            {% for student in students %}
+                            <option value="{{ student.id }}">{{ student.fname }}</option>
+                            {% endfor %}
+                        </select><br><br>
+                    
+                        <button type="submit" name="addmsg" class="btn">
+                            <i class="bx bx-paper-plane"></i> Send
+                        </button>
+                    </form>
+                    
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
