@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <title>Settings</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/icon.png') }}" type="image/png">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dash.css') }}">
+  <link href="https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo-details">
+      <i class="bx bx-diamond"></i>
+      <span class="logo_name">Welcome</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/teacher/dashboard"><i class="bx bx-grid-alt"></i> Dashboard</a></li>
+      <li><a href="/exams"><i class="bx bx-book-content"></i> Exams</a></li>
+      <li><a href="/results"><i class="bx bxs-bar-chart-alt-2"></i> Results</a></li>
+      <li><a href="/records"><i class="bx bxs-user-circle"></i> Records</a></li>
+      <li><a href="/teacher/message"><i class="bx bx-message"></i> Messages</a></li>
+      <li><a href="#" class="active"><i class="bx bx-cog"></i> Settings</a></li>
+      <li><a href="/help"><i class="bx bx-help-circle"></i> Help</a></li>
+      <li class="log_out"><a href="/logout"><i class="bx bx-log-out-circle"></i> Log out</a></li>
+    </ul>
+  </div>
+
+  <!-- Home Section -->
+  <section class="home-section">
+    <nav>
+      <div class="sidebar-button">
+        <i class="bx bx-menu sidebarBtn"></i>
+        <span class="dashboard">Teacher's Dashboard</span>
+      </div>
+    </nav>
+
+    <div class="home-content">
+      <div class="stat-boxes">
+        <!-- Profile Update Box -->
+        <div class="recent-stat box" style="width: 40%;">
+          <div class="title">My Profile</div>
+          <br>
+          <!-- Profile Picture -->
+          <img src="{{ session['teacher_img'] }}" alt="Profile Picture" style="display: block; margin: auto; width: 50%; max-width: 200px; border-radius: 50%;">
+
+          <!-- Update Profile Form -->
+          <form action="" method="post">
+            <!-- Full Name -->
+            <label for="fname">Full Name</label><br>
+            <input class="inputbox" type="text" id="fname" name="fname" placeholder="Enter your full name" value="{{ teacher.fname }}" minlength="4" maxlength="30" required><br>
+
+            <!-- Subject -->
+            <label for="subject">Subject</label><br>
+            <input class="inputbox" type="text" id="subject" name="subject" placeholder="Subject" value="{{ teacher.subject }}" required><br>
+
+            <!-- Username -->
+            <label for="uname">Username</label><br>
+            <input class="inputbox" type="text" id="uname" name="uname" value="{{ teacher.uname }}" minlength="4" maxlength="100" required><br>
+
+            <!-- Email -->
+            <label for="email">Email</label><br>
+            <input class="inputbox" type="email" id="email" name="email" placeholder="Enter your email" value="{{ teacher.email }}" minlength="5" maxlength="50" required><br>
+
+            <!-- Date of Birth -->
+            <label for="dob">Date of Birth</label><br>
+            <input class="inputbox" type="date" id="dob" name="dob" value="{{ teacher.dob }}" required><br>
+
+            <!-- Gender -->
+            <label for="gender">Gender</label><br>
+            <input class="inputbox" type="text" id="gender" name="gender" placeholder="Enter your gender (M or F)" value="{{ teacher.gender }}" minlength="1" maxlength="1" required><br>
+
+            <br>
+            <button type="submit" name="submit" class="btn">Update</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
