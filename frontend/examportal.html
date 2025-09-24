@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dash.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='img/icon.png') }}" type="image/png">
+    <title>Exams</title>
+    <script type="text/javascript">
+        function startTimer() {
+            // Ensure 'exam_subtime' is in a valid format for JavaScript Date
+            var countDownDate = new Date("{{ exam_subtime | safe }}").getTime();
+            if (isNaN(countDownDate)) {
+                document.getElementById("time").innerHTML = "Invalid timer data";
+                return;
+            }
+
+            var x = setInterval(function() {
+                var now = new Date().getTime();
+                var distance = countDownDate - now;
+
+                if (distance < 0) {
+                    clearInterval(x);
+                    document.getElementById("form1").submit(); // Automatically submit when time expires
+                    return;
+                }
+
+                var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                document.getElementById("time").innerHTML = "Time Remaining: " + hours + "h " + minutes + "m " + seconds + "s";
+            }, 1000);
+        }
+    </script>
+</head>
+<body onload="startTimer()">
+    <div class="sidebar active">
+        <ul class="nav-links">
+            <li><a href="#"><span class="links_name">Dashboard</span></a></li>
+            <li><a href="{{ url_for('take_exam', exid=exam['exid']) }}" class="active"></a></li>
+        </ul>
+    </div>
+    <section class="home-section">
+        <nav>
+            <div class="sidebar-button">
+                <span class="dashboard">Student Dashboard</span>
+            </div>
+        </nav>
+        <div class="home-content">
+            <div class="stat-boxes">
+                <div class="recent-stat box">
+                    <h3>Exam Name: {{ exam['exname'] }}
+                        <p id="time" style="float:right"></p>
+                    </h3>
+                    <p>Description: {{ exam['desp'] }}</p>
+                    <form action="{{ url_for('take_exam', exid=exam['exid']) }}" id="form1" method="post">
+                        {% for question in questions %}
+                            <input type="hidden" name="exid" value="{{ exam['exid'] }}">
+                            <input type="hidden" name="qid{{ loop.index }}" value="{{ question['qid'] }}">
+                            <p><b>Q{{ loop.index }}. {{ question['qstn'] }}</b></p>
+                            
+                            {% for option in ['qstn_o1', 'qstn_o2', 'qstn_o3', 'qstn_o4'] %}
+                                <input type="radio" id="{{ option }}{{ loop.index }}" name="o{{ loop.index }}" value="{{ question[option] }}">
+                                <label for="{{ option }}{{ loop.index }}">{{ question[option] }}</label><br>
+                            {% endfor %}
+                        {% endfor %}
+                        <button type="reset" class="rbtn">Reset All</button>
+                        <button type="submit" class="btn">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html>
